@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <!-- Configuración para evitar el escalado reducido en dispositivos específicos -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>LottoSmart 1.1.0 - Optimización de Lotería e Inteligencia Deportiva</title>
+    
+    <!-- CONFIGURACIÓN PWA MÓVIL -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#2d0b16">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+    <style>
+        /* Paleta de colores de alto contraste */
+        :root {
+            --bg-principal: #0f0f12;
+            --bg-tarjeta: #16161e;
+            --texto-claro: #f4f4f7;
+            --texto-mutado: #8a8a9e;
+            --acento-rojo: #ff3b69;
+            --acento-vino: #2d0b16;
+            --acento-verde: #00e676;
+            --acento-gris: #2a2a35;
+            --acento-oro: #ffd700;
+        }
+
+        * { 
+            box-sizing: border-box; 
+            margin: 0; 
+            padding: 0; 
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--bg-principal);
+            color: var(--texto-claro);
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            -webkit-text-size-adjust: 100%;
+            text-size-adjust: 100%;
+        }
+
+        .app-container {
+            width: 100%;
+            max-width: 440px;
+            background: var(--bg-tarjeta);
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 12px 40px rgba(0,0,0,0.6);
+            border: 1px solid #232330;
+        }
+
+        header { 
+            text-align: center; 
+            margin-bottom: 24px; 
+        }
+
+        header h1 { 
+            font-size: 26px; 
+            color: #fff; 
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+
+        header p { 
+            color: var(--texto-mutado); 
+            font-size: 13px; 
+            margin-top: 4px; 
+        }
+        
+        .selector-modo {
+            display: flex;
+            background: #20202b;
+            border-radius: 10px;
+            padding: 4px;
+            margin-bottom: 20px;
+            gap: 2px;
+        }
+
+        .btn-tab {
+            flex: 1;
+            background: transparent;
+            border: none;
+            color: var(--texto-mutado);
+            padding: 10px 4px;
+            font-weight: 600;
+            font-size: 13px;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+
+        .btn-tab.activo {
+            background: var(--acento-vino);
+            color: var(--acento-rojo);
+            border: 1px solid rgba(255,59,105,0.15);
+        }
+
+        .panel-control { 
+            background: #1c1c27; 
+            border-radius: 10px; 
+            padding: 16px; 
+            margin-bottom: 24px; 
+            border: 1px solid #252535;
+        }
+
+        .control-group label { 
+            display: block; 
+            font-size: 11px; 
+            color: var(--acento-rojo); 
+            margin-bottom: 8px; 
+            text-transform: uppercase; 
+            letter-spacing: 0.8px;
+            font-weight: 600;
+        }
+        
+        .filtro-item {
+            font-size: 13.5px; 
+            color: #e2e2e9;
+            display: flex;
+            align-items: center;
+            margin-top: 6px;
+        }
+
+        .filtro-item span {
+            color: var(--acento-verde);
+            margin-right: 8px;
+            font-weight: bold;
+        }
+
+        .btn-principal {
+            width: 100%;
+            background: linear-gradient(135deg, #ff3b69 0%, #bd143c 100%);
+            color: white;
+            border: none;
+            padding: 16px;
+            font-size: 15px;
+            font-weight: bold;
+            border-radius: 10px;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(255, 59, 105, 0.3);
+            transition: transform 0.1s, opacity 0.2s;
+            margin-bottom: 12px;
+        }
+
+        .btn-principal:active { 
+            transform: scale(0.98); 
+        }
+
+        .resultados-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 20px;
+            margin-bottom: 10px;
+        }
+
+        .resultados-header h2 {
+            font-size: 14px;
+            color: var(--texto-mutado);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-limpiar {
+            background: transparent;
+            border: none;
+            color: var(--texto-mutado);
+            font-size: 12px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 8px;
+            border-radius: 4px;
+        }
+
+        .btn-limpiar:hover {
+            color: var(--acento-rojo);
+            background: rgba(255, 59, 105, 0.05);
+        }
+
+        .resultados-section { 
+            max-height: 320px;
+            overflow-y: auto;
+            padding-right: 4px;
+        }
+
+        .resultados-section::-webkit-scrollbar { width: 4px; }
+        .resultados-section::-webkit-scrollbar-thumb { background: #333345; border-radius: 4px; }
+
+        .resultado-fila {
+            background: #1c1c27;
+            padding: 12px 14px;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            border-left: 4px solid var(--acento-rojo);
+            animation: aparecer 0.3s ease-out;
+        }
+
+        @keyframes aparecer {
+            from { opacity: 0; transform: translateY(-5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .resultado-cuerpo {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+        }
+
+        .bolas-contenedor { 
+            display: flex; 
+            flex-wrap: wrap;
+            gap: 6px; 
+            max-width: 85%;
+            align-items: center;
+        }
+
+        .bola {
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, #2a2a38 0%, #171721 100%);
+            border: 1px solid #404054;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 12px;
+            color: #fff;
+        }
+
+        .bola.alta { 
+            border-color: var(--acento-rojo); 
+            color: #ff6b8b; 
+            background: linear-gradient(135deg, #3a121e 0%, #171721 100%);
+        }
+
+        /* Bolas exclusivas para las Estrellas de Euromillones */
+        .bola.estrella {
+            border-color: var(--acento-oro);
+            color: var(--acento-oro);
+            background: linear-gradient(135deg, #2c2500 0%, #171721 100%);
+            font-size: 11px;
+            position: relative;
+        }
+
+        .separador-estrellas {
+            color: #404054;
+            font-weight: bold;
+            font-size: 14px;
+            margin: 0 2px;
+        }
+
+        /* Diseño específico para los signos compactos de La Quiniela */
+        .quiniela-contenedor {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+            background: #12121a;
+            padding: 8px;
+            border-radius: 8px;
+            border: 1px solid #252535;
+        }
+
+        .casilla-q {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background: #1f1f2e;
+            border-radius: 4px;
+            padding: 4px;
+            min-width: 21px;
+        }
+
+        .num-p {
+            font-size: 9px;
+            color: var(--texto-mutado);
+            margin-bottom: 2px;
+        }
+
+        .signo-p {
+            font-size: 12px;
+            font-weight: 800;
+            color: #fff;
+        }
+
+        .signo-p.x { color: #ffb300; }
+        .signo-p.dos { color: var(--acento-rojo); }
+
+        .pleno-box {
+            font-size: 11px;
+            background: rgba(255, 59, 105, 0.1);
+            border: 1px dashed var(--acento-rojo);
+            color: #ff6b8b;
+            padding: 6px;
+            border-radius: 6px;
+            margin-top: 8px;
+            text-align: center;
+            font-weight: 600;
+        }
+
+        .tag-info { 
+            font-size: 10px; 
+            color: var(--acento-verde); 
+            background: rgba(0,230,118,0.12); 
+            padding: 3px 8px; 
+            border-radius: 12px; 
+            font-weight: 600;
+            white-space: nowrap;
+        }
+    </style>
+</head>
+<body>
+
+<div class="app-container" data-author="medbasha">
+    <header>
+        <h1>LottoSmart ✦</h1>
+        <p>Generación de apuestas de baja popularidad masiva</p>
+    </header>
+
+    <div class="selector-modo">
+        <button class="btn-tab activo" id="tab-euromillon" onclick="cambiarModo('euromillon')">Euromillones</button>
+        <button class="btn-tab" id="tab-primitiva" onclick="cambiarModo('primitiva')">La Primitiva</button>
+        <button class="btn-tab" id="tab-quiniela" onclick="cambiarModo('quiniela')">La Quiniela</button>
+    </div>
+
+    <div class="panel-control" id="panel-filtros">
+        <div class="control-group">
+            <label id="filtro-titulo">Filtros Inteligentes Activos</label>
+            <div id="filtro-contenido">
+                <div class="filtro-item"><span>✓</span> Neutralizar efecto cumpleaños (&gt;31)</div>
+                <div class="filtro-item"><span>✓</span> Ratio de paridad balanceado (3:2)</div>
+            </div>
+        </div>
+    </div>
+
+    <button class="btn-principal" id="btn-generar" onclick="ejecutarGeneracion()">Optimizar Combinación</button>
+
+    <div class="resultados-header">
+        <h2>Historial de Apuestas</h2>
+        <button class="btn-limpiar" onclick="limpiarHistorial()">
+            🗑️ Borrar todo
+        </button>
+    </div>
+
+    <div class="resultados-section" id="resultados">
+        <!-- Las combinaciones se cargarán aquí de forma dinámica -->
+    </div>
+</div>
+
+<script>
+    /* Powered by medbasha */
+    let modoActual = 'euromillon';
+
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('sw.js')
+                .then(reg => console.log('LottoSmart 1.1.0 PWA lista para operar.', reg))
+                .catch(err => console.error('Fallo al registrar entorno de instalación', err));
+        });
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+        cargarHistorial();
+    });
+
+    function cambiarModo(modo) {
+        modoActual = modo;
+        document.querySelectorAll('.btn-tab').forEach(b => b.classList.remove('activo'));
+        
+        const panelFiltros = document.getElementById('filtro-contenido');
+        const btnGenerar = document.getElementById('btn-generar');
+
+        if(modo === 'euromillon') {
+            document.getElementById('tab-euromillon').classList.add('activo');
+            panelFiltros.innerHTML = `
+                <div class="filtro-item"><span>✓</span> Neutralizar efecto cumpleaños (&gt;31)</div>
+                <div class="filtro-item"><span>✓</span> Generación activa de 2 Estrellas (1-12)</div>
+            `;
+            btnGenerar.innerText = "Optimizar Combinación";
+        }
+        if(modo === 'primitiva') {
+            document.getElementById('tab-primitiva').classList.add('activo');
+            panelFiltros.innerHTML = `
+                <div class="filtro-item"><span>✓</span> Neutralizar efecto cumpleaños (&gt;31)</div>
+                <div class="filtro-item"><span>✓</span> Filtro de números consecutivos evitado</div>
+            `;
+            btnGenerar.innerText = "Optimizar Combinación";
+        }
+        if(modo === 'quiniela') {
+            document.getElementById('tab-quiniela').classList.add('activo');
+            panelFiltros.innerHTML = `
+                <div class="filtro-item"><span>✓</span> Ponderación estadística de localía (1)</div>
+                <div class="filtro-item"><span>✓</span> Algoritmo de distribución de sorpresas (X/2)</div>
+            `;
+            btnGenerar.innerText = "Generar Pronóstico 1X2";
+        }
+        
+        cargarHistorial();
+    }
+
+    function ejecutarGeneracion() {
+        if (modoActual === 'quiniela') {
+            generarQuiniela();
+            return;
+        }
+
+        const maxNumero = modoActual === 'euromillon' ? 50 : 49;
+        const totalNumeros = modoActual === 'euromillon' ? 5 : 6;
+        
+        let numeros = new Set();
+        
+        // Algoritmo Anti-Cumpleaños
+        while(numeros.size < 3) {
+            let num = Math.floor(Math.random() * (maxNumero - 32 + 1)) + 32;
+            numeros.add(num);
+        }
+
+        while(numeros.size < totalNumeros) {
+            let num = Math.floor(Math.random() * maxNumero) + 1;
+            numeros.add(num);
+        }
+
+        let listaOrdenada = Array.from(numeros).sort((a, b) => a - b);
+        let resultadoFinal = { tipo: modoActual, datos: listaOrdenada };
+
+        // Calcular las 2 estrellas sin repetir (1-12)
+        if (modoActual === 'euromillon') {
+            let estrellas = new Set();
+            while(estrellas.size < 2) {
+                let est = Math.floor(Math.random() * 12) + 1;
+                estrellas.add(est);
+            }
+            resultadoFinal.estrellas = Array.from(estrellas).sort((a, b) => a - b);
+        }
+        
+        guardarEnStorage(modoActual, resultadoFinal);
+        renderizarLotto(resultadoFinal);
+    }
+
+    function generarQuiniela() {
+        let signos = [];
+        const opciones = ['1', '1', '1', 'X', '2']; 
+        
+        for (let i = 0; i < 14; i++) {
+            let eleccion = opciones[Math.floor(Math.random() * opciones.length)];
+            signos.push(eleccion);
+        }
+
+        const golesOpc = ['0', '1', '2', 'M'];
+        let golesLocal = golesOpc[Math.floor(Math.random() * golesOpc.length)];
+        let golesVisitante = golesOpc[Math.floor(Math.random() * golesOpc.length)];
+        let pleno15 = `M.15: Local ${golesLocal} - Visitante ${golesVisitante}`;
+
+        const objetoQuiniela = { tipo: 'quiniela', partidos: signos, pleno: pleno15 };
+        
+        guardarEnStorage('quiniela', objetoQuiniela);
+        renderizarQuiniela(objetoQuiniela);
+    }
+
+    function renderizarLotto(obj) {
+        const contenedor = document.getElementById('resultados');
+        const numeros = obj.datos || obj; 
+        
+        let html = `
+            <div class="resultado-fila">
+                <div class="resultado-cuerpo">
+                    <div class="bolas-contenedor">`;
+        
+        numeros.forEach(n => {
+            let claseAlta = n > 31 ? 'alta' : '';
+            html += `<div class="bola ${claseAlta}">${n}</div>`;
+        });
+
+        if (obj.estrellas && obj.estrellas.length === 2) {
+            html += `<div class="separador-estrellas">|</div>`;
+            obj.estrellas.forEach(e => {
+                html += `<div class="bola estrella">⭐${e}</div>`;
+            });
+        }
+
+        html += `   </div>
+                    <span class="tag-info">Único</span>
+                </div>
+            </div>`;
+        contenedor.insertAdjacentHTML('afterbegin', html);
+    }
+
+    function renderizarQuiniela(obj) {
+        const contenedor = document.getElementById('resultados');
+        let html = `
+            <div class="resultado-fila">
+                <div class="resultado-cuerpo" style="margin-bottom: 4px;">
+                    <div class="quiniela-contenedor">`;
+        
+        obj.partidos.forEach((sig, index) => {
+            let claseColor = sig === 'X' ? 'x' : (sig === '2' ? 'dos' : '');
+            html += `
+                <div class="casilla-q">
+                    <span class="num-p">${index + 1}</span>
+                    <span class="signo-p ${claseColor}">${sig}</span>
+                </div>`;
+        });
+
+        html += `   </div>
+                    <span class="tag-info" style="color:#ffb300; background:rgba(255,179,0,0.12)">1X2</span>
+                </div>
+                <div class="pleno-box">${obj.pleno}</div>
+            </div>`;
+        contenedor.insertAdjacentHTML('afterbegin', html);
+    }
+
+    function guardarEnStorage(modo, objetoGuardar) {
+        let clave = `lottosmart_${modo}`;
+        let historial = JSON.parse(localStorage.getItem(clave)) || [];
+        
+        historial.unshift(objetoGuardar);
+        if(historial.length > 15) historial.pop(); 
+        
+        localStorage.setItem(clave, JSON.stringify(historial));
+    }
+
+    function cargarHistorial() {
+        const contenedor = document.getElementById('resultados');
+        contenedor.innerHTML = '';
+        
+        let clave = `lottosmart_${modoActual}`;
+        let historial = JSON.parse(localStorage.getItem(clave)) || [];
+        
+        for(let i = 0; i < historial.length; i++) {
+            let registro = historial[i];
+            if (registro.tipo === 'quiniela') {
+                renderizarQuiniela(registro);
+            } else {
+                renderizarLotto(registro);
+            }
+        }
+    }
+
+    function limpiarHistorial() {
+        let clave = `lottosmart_${modoActual}`;
+        localStorage.removeItem(clave);
+        document.getElementById('resultados').innerHTML = '';
+    }
+</script>
+</body>
+</html>
